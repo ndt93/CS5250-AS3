@@ -28,9 +28,11 @@ struct file_operations onebyte_fops = {
 };
 
 char *onebyte_data = NULL;
+char *onebyte_ptr;
 
 int onebyte_open(struct inode *inode, struct file *filep)
 {
+    onebyte_ptr = onebyte_data;
     return 0;  // Always successful
 }
 
@@ -42,13 +44,20 @@ int onebyte_release(struct inode *inode, struct file *filep)
 ssize_t onebyte_read(struct file *filep, char *buf,
                      size_t count, loff_t *f_pos)
 {
-    /* Please complete the function on your own */
+    if (!onebyte_ptr)
+        return 0;
+
+    if (count == 0)
+        return 0;
+
+    put_user(*onebyte_ptr, buf);
+    onebyte_ptr = NULL;
+    return 1;
 }
 
 ssize_t onebyte_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos)
 {
-    /* Please complete the function on your own */
 }
 
 static int onebyte_init(void)
