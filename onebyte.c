@@ -58,6 +58,14 @@ ssize_t onebyte_read(struct file *filep, char *buf,
 ssize_t onebyte_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos)
 {
+    if (count == 0)
+        return 0;
+
+    get_user(*onebyte_data, buf);
+
+    if (count > 1)
+        return -ENOSPC;
+    return 1;
 }
 
 static int onebyte_init(void)
