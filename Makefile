@@ -1,4 +1,4 @@
-obj-m += onebyte.o
+obj-m += fourmb.o
 
 all:
 	make -C /lib/modules/`uname -r`/build M=$(PWD) modules

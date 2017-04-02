@@ -11,68 +11,68 @@
 #define MAJOR_NUMBER 61
 
 /* Forward declaration */
-int onebyte_open(struct inode *inode, struct file *filep);
-int onebyte_release(struct inode *inode, struct file *filep);
-ssize_t onebyte_read(struct file *filep, char *buf,
+int fourmb_open(struct inode *inode, struct file *filep);
+int fourmb_release(struct inode *inode, struct file *filep);
+ssize_t fourmb_read(struct file *filep, char *buf,
                      size_t count, loff_t *f_pos);
-ssize_t onebyte_write(struct file *filep, const char *buf,
+ssize_t fourmb_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos);
-static void onebyte_exit(void);
+static void fourmb_exit(void);
 
 /* Definition of file_operation structure */
-struct file_operations onebyte_fops = {
-    read:     onebyte_read,
-    write:    onebyte_write,
-    open:     onebyte_open,
-    release:  onebyte_release
+struct file_operations fourmb_fops = {
+    read:     fourmb_read,
+    write:    fourmb_write,
+    open:     fourmb_open,
+    release:  fourmb_release
 };
 
-char *onebyte_data = NULL;
-char *onebyte_ptr;
+char *fourmb_data = NULL;
+char *fourmb_ptr;
 
-int onebyte_open(struct inode *inode, struct file *filep)
+int fourmb_open(struct inode *inode, struct file *filep)
 {
-    onebyte_ptr = onebyte_data;
+    fourmb_ptr = fourmb_data;
     return 0;  // Always successful
 }
 
-int onebyte_release(struct inode *inode, struct file *filep)
+int fourmb_release(struct inode *inode, struct file *filep)
 {
     return 0;  // Always successful
 }
 
-ssize_t onebyte_read(struct file *filep, char *buf,
+ssize_t fourmb_read(struct file *filep, char *buf,
                      size_t count, loff_t *f_pos)
 {
-    if (!onebyte_ptr)
+    if (!fourmb_ptr)
         return 0;
 
     if (count == 0)
         return 0;
 
-    put_user(*onebyte_ptr, buf);
-    onebyte_ptr = NULL;
+    put_user(*fourmb_ptr, buf);
+    fourmb_ptr = NULL;
     return 1;
 }
 
-ssize_t onebyte_write(struct file *filep, const char *buf,
+ssize_t fourmb_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos)
 {
     if (count == 0)
         return 0;
 
-    get_user(*onebyte_data, buf);
+    get_user(*fourmb_data, buf);
 
     if (count > 1)
         return -ENOSPC;
     return 1;
 }
 
-static int onebyte_init(void)
+static int fourmb_init(void)
 {
     int result;
     // Register the device
-    result = register_chrdev(MAJOR_NUMBER, "onebyte", &onebyte_fops);
+    result = register_chrdev(MAJOR_NUMBER, "fourmb", &fourmb_fops);
     if (result < 0) {
         return result;
     }
@@ -81,32 +81,32 @@ static int onebyte_init(void)
      * kmalloc is just like malloc, the second parameter is
      * the type of memory to be allocated.
      * To release the memory allocated by kmalloc, use kfree. */
-    onebyte_data = kmalloc(sizeof(char), GFP_KERNEL);
-    if (!onebyte_data) {
-        onebyte_exit();
+    fourmb_data = kmalloc(sizeof(char), GFP_KERNEL);
+    if (!fourmb_data) {
+        fourmb_exit();
         // Cannot allocate memory
         // Return no memory error, negative signify a failure
         return -ENOMEM;
     }
     // Initialize the value to be X
-    *onebyte_data = 'X';
-    printk(KERN_ALERT "This is a onebyte device module\n");
+    *fourmb_data = 'X';
+    printk(KERN_ALERT "This is a fourmb device module\n");
     return 0;
 }
 
-static void onebyte_exit(void)
+static void fourmb_exit(void)
 {
     // If the pointer is pointing to something
-    if (onebyte_data) {
+    if (fourmb_data) {
         // Free the memory and assign the pointer to NULL
-        kfree(onebyte_data);
-        onebyte_data = NULL;
+        kfree(fourmb_data);
+        fourmb_data = NULL;
     }
     // Unregister the device
-    unregister_chrdev(MAJOR_NUMBER, "onebyte");
+    unregister_chrdev(MAJOR_NUMBER, "fourmb");
     printk(KERN_ALERT "Onebyte device module is unloaded\n");
 }
 
 MODULE_LICENSE("GPL");
-module_init(onebyte_init);
-module_exit(onebyte_exit);
+module_init(fourmb_init);
+module_exit(fourmb_exit);
