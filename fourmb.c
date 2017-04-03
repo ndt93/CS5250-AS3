@@ -67,7 +67,8 @@ ssize_t fourmb_write(struct file *filep, const char *buf,
         bytes_written++;
     }
 
-    data_len = fourmb_ptr - fourmb_data;
+    if (fourmb_ptr - fourmb_data > data_len)
+        data_len = fourmb_ptr - fourmb_data;
 
     return bytes_written;
 }
