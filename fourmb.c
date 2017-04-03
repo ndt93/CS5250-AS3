@@ -16,6 +16,7 @@ int fourmb_open(struct inode *inode, struct file *filep);
 int fourmb_release(struct inode *inode, struct file *filep);
 ssize_t fourmb_read(struct file *filep, char *buf,
                      size_t count, loff_t *f_pos);
+loff_t fourmb_llseek(struct file *file, loff_t offset, int whence);
 ssize_t fourmb_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos);
 static void fourmb_exit(void);
@@ -48,7 +49,7 @@ ssize_t fourmb_read(struct file *filep, char *buf,
 {
     size_t bytes_read = 0;
 
-    while (count && (fourmb_ptr - fourmb_data) < data_len) {
+    while (count && (fourmb_ptr < fourmb_data + data_len)) {
         put_user(*(fourmb_ptr++), buf++);
         count--;
         bytes_read++;
@@ -62,7 +63,7 @@ ssize_t fourmb_write(struct file *filep, const char *buf,
 {
     int bytes_written = 0;
 
-    while (count && (fourmb_ptr - fourmb_data) < BUF_SIZE) {
+    while (count && (fourmb_ptr < fourmb_data + BUF_SIZE)) {
         get_user(*(fourmb_ptr++), buf++);
         count--;
         bytes_written++;
@@ -75,9 +76,32 @@ ssize_t fourmb_write(struct file *filep, const char *buf,
 }
 
 
-static loff_t fourmb_llseek(struct file *file, loff_t offset, int whence)
+loff_t fourmb_llseek(struct file *file, loff_t offset, int whence)
 {
+    char *new_ptr;
 
+    switch (whence) {
+        case SEEK_SET:
+            new_ptr = fourmb_data + offset;
+            break;
+        case SEEK_CUR:
+            new_ptr = fourmb_ptr + offset;
+            break;
+        case SEEK_END:
+            new_ptr = fourmb_data + data_len + offset;
+            break;
+        default:
+            new_ptr = fourmb_ptr;
+    }
+
+    if (new_ptr < fourmb_data) {
+        new_ptr = fourmb_data;
+    } else if (new_ptr > fourmb_data + data_len) {
+        new_ptr = fourmb_data + data_len;
+    }
+
+    fourmb_ptr = new_ptr;
+    return fourmb_ptr - fourmb_data;
 }
 
 static int fourmb_init(void)
