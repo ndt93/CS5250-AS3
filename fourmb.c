@@ -9,8 +9,9 @@
 #include <asm/uaccess.h>
 
 #define MAJOR_NUMBER 61
+#define DEVICE_NAME "fourmb"
+#define BUF_SIZE (4*1024*1024)
 
-/* Forward declaration */
 int fourmb_open(struct inode *inode, struct file *filep);
 int fourmb_release(struct inode *inode, struct file *filep);
 ssize_t fourmb_read(struct file *filep, char *buf,
@@ -19,91 +20,85 @@ ssize_t fourmb_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos);
 static void fourmb_exit(void);
 
-/* Definition of file_operation structure */
 struct file_operations fourmb_fops = {
-    read:     fourmb_read,
-    write:    fourmb_write,
-    open:     fourmb_open,
-    release:  fourmb_release
+    .read = fourmb_read,
+    .write = fourmb_write,
+    .open = fourmb_open,
+    .release = fourmb_release
 };
 
 char *fourmb_data = NULL;
 char *fourmb_ptr;
+size_t data_len = 0;
 
 int fourmb_open(struct inode *inode, struct file *filep)
 {
     fourmb_ptr = fourmb_data;
-    return 0;  // Always successful
+    return 0;
 }
 
 int fourmb_release(struct inode *inode, struct file *filep)
 {
-    return 0;  // Always successful
+    return 0;
 }
 
 ssize_t fourmb_read(struct file *filep, char *buf,
                      size_t count, loff_t *f_pos)
 {
-    if (!fourmb_ptr)
-        return 0;
+    size_t bytes_read = 0;
 
-    if (count == 0)
-        return 0;
+    while (count && (fourmb_ptr - fourmb_data) < data_len) {
+        put_user(*(fourmb_ptr++), buf++);
+        count--;
+        bytes_read++;
+    }
 
-    put_user(*fourmb_ptr, buf);
-    fourmb_ptr = NULL;
-    return 1;
+    return bytes_read;
 }
 
 ssize_t fourmb_write(struct file *filep, const char *buf,
                       size_t count, loff_t *f_pos)
 {
-    if (count == 0)
-        return 0;
+    int bytes_written = 0;
 
-    get_user(*fourmb_data, buf);
+    while (count && (fourmb_ptr - fourmb_data) < BUF_SIZE) {
+        get_user(*(fourmb_ptr++), buf++);
+        count--;
+        bytes_written++;
+    }
 
-    if (count > 1)
-        return -ENOSPC;
-    return 1;
+    data_len = fourmb_ptr - fourmb_data;
+
+    return bytes_written;
 }
 
 static int fourmb_init(void)
 {
     int result;
-    // Register the device
-    result = register_chrdev(MAJOR_NUMBER, "fourmb", &fourmb_fops);
+
+    result = register_chrdev(MAJOR_NUMBER, DEVICE_NAME, &fourmb_fops);
     if (result < 0) {
         return result;
     }
 
-    /* Allocate one byte of memory for storage
-     * kmalloc is just like malloc, the second parameter is
-     * the type of memory to be allocated.
-     * To release the memory allocated by kmalloc, use kfree. */
-    fourmb_data = kmalloc(sizeof(char), GFP_KERNEL);
+    fourmb_data = kmalloc(BUF_SIZE, GFP_KERNEL);
     if (!fourmb_data) {
         fourmb_exit();
-        // Cannot allocate memory
-        // Return no memory error, negative signify a failure
         return -ENOMEM;
     }
-    // Initialize the value to be X
-    *fourmb_data = 'X';
+    data_len = 0;
+
     printk(KERN_ALERT "This is a fourmb device module\n");
     return 0;
 }
 
 static void fourmb_exit(void)
 {
-    // If the pointer is pointing to something
     if (fourmb_data) {
-        // Free the memory and assign the pointer to NULL
         kfree(fourmb_data);
         fourmb_data = NULL;
     }
-    // Unregister the device
-    unregister_chrdev(MAJOR_NUMBER, "fourmb");
+    unregister_chrdev(MAJOR_NUMBER, DEVICE_NAME);
     printk(KERN_ALERT "Onebyte device module is unloaded\n");
 }
 
