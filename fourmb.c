@@ -11,6 +11,8 @@
 #define MAJOR_NUMBER 61
 #define DEVICE_NAME "fourmb"
 #define BUF_SIZE (4*1024*1024)
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 int fourmb_open(struct inode *inode, struct file *filep);
 int fourmb_release(struct inode *inode, struct file *filep);
@@ -47,31 +49,19 @@ int fourmb_release(struct inode *inode, struct file *filep)
 ssize_t fourmb_read(struct file *filep, char *buf,
                     size_t count, loff_t *f_pos)
 {
-    size_t bytes_read = 0;
-
-    while (count && (fourmb_ptr < fourmb_data + data_len)) {
-        put_user(*(fourmb_ptr++), buf++);
-        count--;
-        bytes_read++;
-    }
-
+    size_t bytes_read = MIN(count, data_len - (fourmb_ptr - fourmb_data));
+    copy_to_user(buf, fourmb_ptr, bytes_read);
+    fourmb_ptr += bytes_read;
     return bytes_read;
 }
 
 ssize_t fourmb_write(struct file *filep, const char *buf,
                      size_t count, loff_t *f_pos)
 {
-    int bytes_written = 0;
-
-    while (count && (fourmb_ptr < fourmb_data + BUF_SIZE)) {
-        get_user(*(fourmb_ptr++), buf++);
-        count--;
-        bytes_written++;
-    }
-
-    if (fourmb_ptr - fourmb_data > data_len)
-        data_len = fourmb_ptr - fourmb_data;
-
+    size_t bytes_written = MIN(count, BUF_SIZE - (fourmb_ptr - fourmb_data));
+    copy_from_user(fourmb_ptr, buf, bytes_written);
+    fourmb_ptr += bytes_written;
+    data_len = MAX(data_len, fourmb_ptr - fourmb_data);
     return bytes_written;
 }
 
