@@ -21,3 +21,9 @@ sudo insmod fourmb.ko
 ./llseek_test
 cat /dev/fourmb
 sudo rmmod fourmb
+
+echo -e "\n--------------"
+sudo insmod fourmb.ko
+./test3
+dmesg | tail
+sudo rmmod fourmb
