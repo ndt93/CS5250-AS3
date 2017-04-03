@@ -11,4 +11,6 @@
 
 #define IOCTL_GET_MSG _IOR(MAJOR_NUMBER, 1, char *)
 
+#define IOCTL_SWP_MSG _IOWR(MAJOR_NUMBER, 2, char *)
+
 #endif

@@ -43,6 +43,7 @@ char *fourmb_ptr;
 size_t data_len = 0;
 
 char dev_msg[MSG_MAX_LEN + 1];
+char tmp_dev_msg[MSG_MAX_LEN + 1];
 
 int fourmb_open(struct inode *inode, struct file *filep)
 {
@@ -132,6 +133,12 @@ long fourmb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
             break;
         case IOCTL_SET_MSG:
             copy_from_arg(dev_msg, arg);
+            break;
+        case IOCTL_SWP_MSG:
+            memcpy(tmp_dev_msg, dev_msg, sizeof(dev_msg));
+            copy_from_arg(dev_msg, arg);
+            copy_to_arg(tmp_dev_msg, arg);
+            printk(KERN_ALERT "dev_msg: %s", dev_msg);
             break;
         default:
             return -ENOTTY;

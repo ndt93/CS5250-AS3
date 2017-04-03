@@ -24,6 +24,11 @@ sudo rmmod fourmb
 
 echo -e "\n--------------"
 sudo insmod fourmb.ko
+./test2
+sudo rmmod fourmb
+
+echo "--------------"
+sudo insmod fourmb.ko
 ./test3
 dmesg | tail
 sudo rmmod fourmb
