@@ -23,6 +23,7 @@ static void fourmb_exit(void);
 struct file_operations fourmb_fops = {
     .read = fourmb_read,
     .write = fourmb_write,
+    .llseek = fourmb_llseek,
     .open = fourmb_open,
     .release = fourmb_release
 };
@@ -43,7 +44,7 @@ int fourmb_release(struct inode *inode, struct file *filep)
 }
 
 ssize_t fourmb_read(struct file *filep, char *buf,
-                     size_t count, loff_t *f_pos)
+                    size_t count, loff_t *f_pos)
 {
     size_t bytes_read = 0;
 
@@ -57,7 +58,7 @@ ssize_t fourmb_read(struct file *filep, char *buf,
 }
 
 ssize_t fourmb_write(struct file *filep, const char *buf,
-                      size_t count, loff_t *f_pos)
+                     size_t count, loff_t *f_pos)
 {
     int bytes_written = 0;
 
@@ -71,6 +72,12 @@ ssize_t fourmb_write(struct file *filep, const char *buf,
         data_len = fourmb_ptr - fourmb_data;
 
     return bytes_written;
+}
+
+
+static loff_t fourmb_llseek(struct file *file, loff_t offset, int whence)
+{
+
 }
 
 static int fourmb_init(void)
