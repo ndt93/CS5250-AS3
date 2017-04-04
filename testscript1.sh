@@ -11,9 +11,9 @@ sudo rmmod fourmb
 echo "--------------"
 sudo insmod fourmb.ko
 time ./test1
-head /dev/fourmb
+echo `head -c 16 /dev/fourmb`
 echo "***"
-tail /dev/fourmb
+echo `tail -c 16 /dev/fourmb`
 sudo rmmod fourmb
 
 echo "--------------"

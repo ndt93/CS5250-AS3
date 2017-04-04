@@ -127,6 +127,7 @@ void copy_to_arg(char *from, unsigned long arg)
 
 long fourmb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
+    printk(KERN_ALERT "Hello from 4MB ioctl\n");
     switch (cmd) {
         case IOCTL_GET_MSG:
             copy_to_arg(dev_msg, arg);
@@ -162,7 +163,7 @@ static int fourmb_init(void)
     }
     data_len = 0;
 
-    printk(KERN_ALERT "This is a fourmb device module\n");
+    printk(KERN_ALERT "This is a 4MB device module\n");
     return 0;
 }
 
@@ -173,7 +174,7 @@ static void fourmb_exit(void)
         fourmb_data = NULL;
     }
     unregister_chrdev(MAJOR_NUMBER, DEVICE_NAME);
-    printk(KERN_ALERT "Onebyte device module is unloaded\n");
+    printk(KERN_ALERT "4MB device module is unloaded\n");
 }
 
 MODULE_LICENSE("GPL");
